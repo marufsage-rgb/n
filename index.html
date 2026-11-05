@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RST Electronics — Enterprise Suite & Repair Center v7.0</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        primaryDark: '#4338ca',
+                        secondary: '#06b6d4',
+                        accent: '#10b981',
+                        gold: '#d97706',
+                        slateDark: '#070a11'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Cairo', 'Hind Siliguri', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.2s ease-out forwards'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.98)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome 6 & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Hind+Siliguri:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --grad-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --grad-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --grad-amber: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        body {
+            font-family: 'Inter', 'Cairo', 'Hind Siliguri', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
+
+        body.dark {
+            background-color: #070a11;
+            color: #f8fafc;
+        }
+
+        [dir="rtl"] { text-align: right; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .grad-text {
+            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Software Control Options Subtabs */
+        .opt-tab-active {
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
+        }
+
+        /* Printable Media Overrides */
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: #ffffff !important; color: #000000 !important; }
+            .printable-area { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        }
+        .print-only { display: block; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 999px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- TOAST STACK -->
+    <div id="toastStack" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
+
+    <!-- CUSTOM CONFIRMATION / DIALOG MODAL -->
+    <div id="customDialogModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 no-print">
+        <div class="w-full max-w-sm rounded-3xl p-6 glass-panel shadow-2xl space-y-4 text-center">
+            <div id="dialogIcon" class="text-3xl text-indigo-500"><i class="fas fa-info-circle"></i></div>
+            <h3 id="dialogTitle" class="text-lg font-black">Confirmation</h3>
+            <p id="dialogMessage" class="text-xs text-slate-400">Are you sure you want to proceed?</p>
+            <div class="flex gap-2 pt-2">
+                <button id="dialogCancelBtn" onclick="closeCustomDialog(false)" class="flex-1 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 font-bold text-xs">Cancel</button>
+                <button id="dialogConfirmBtn" onclick="closeCustomDialog(true)" class="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN PUBLIC APPLICATION WRAPPER -->
+    <div id="publicStorefrontApp" class="flex-1 flex flex-col">
+        
+        <!-- TOP UTILITY & LIVE MUSCAT CLOCK -->
+        <div class="bg-slate-950 text-slate-300 text-xs py-2 px-6 border-b border-slate-800/80 no-print">
+            <div class="max-w-7xl mx-auto flex justify-between items-center flex-wrap gap-3">
+                <div class="flex items-center gap-5">
+                    <span class="flex items-center gap-1.5"><i class="fas fa-map-marker-alt text-indigo-400"></i> Mabellah Sanaya, Road 6, Muscat, Oman</span>
+                    <a href="tel:+96894301393" class="hover:text-white transition flex items-center gap-1.5"><i class="fas fa-phone-alt text-emerald-400"></i> +968 9430 1393</a>
+                    <a href="mailto:info@rst-electronics.om" class="hover:text-white transition flex items-center gap-1.5 text-indigo-300"><i class="fas fa-envelope text-amber-400"></i> info@rst-electronics.om</a>
+                    <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono text-[10px] border border-indigo-500/30"><i class="fas fa-microchip text-purple-400"></i> Enterprise Solution</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Multi Currency Display Switcher -->
+                    <select id="publicCurrencySelect" onchange="switchCurrency(this.value)" class="bg-slate-900 text-amber-400 text-xs font-mono rounded-xl px-2.5 py-1 border border-slate-800 outline-none cursor-pointer">
+                        <option value="OMR">🇴🇲 OMR (Rial)</option>
+                        <option value="USD">🇺🇸 USD ($)</option>
+                        <option value="EUR">🇪🇺 EUR (€)</option>
+                        <option value="AED">🇦🇪 AED (Dirham)</option>
+                        <option value="SAR">🇸🇦 SAR (Riyal)</option>
+                    </select>
+
+                    <!-- Live Muscat Clock -->
+                    <div class="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[11px] font-mono text-indigo-300 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="muscatLiveClock">00:00:00 GST</span>
+                    </div>
+
+                    <!-- Language Switcher -->
+                    <select id="langSelect" onchange="switchLanguage(this.value)" class="bg-slate-900 text-white text-xs rounded-xl px-2.5 py-1 border border-slate-800 outline-none cursor-pointer">
+                        <option value="en">🇬🇧 English</option>
+                        <option value="ar">🇴🇲 العربية (RTL)</option>
+                        <option value="bn">🇧🇩 বাংলা</option>
+                        <option value="ur">🇵🇰 اردو (RTL)</option>
+                    </select>
+
+                    <button onclick="toggleDarkMode()" class="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 transition" title="Toggle Theme">
+                        <i id="themeIcon" class="fas fa-moon"></i>
+                    </button>
+
+                    <button onclick="showAdminLoginModal()" class="px-3.5 py-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs transition shadow-lg shadow-indigo-600/30 flex items-center gap-1.5">
+                        <i class="fas fa-user-shield"></i> <span>Admin Portal</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEADER NAV -->
+        <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 transition-colors no-print">
+            <div class="max-w-7xl mx-auto px-6 py-3.5 flex justify-between items-center gap-6">
+                <a href="#" onclick="showPublicPage('home'); return false;" class="flex items-center gap-3 group">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center text-white text-2xl shadow-xl shadow-indigo-500/30 group-hover:scale-105 transition">
+                        ⚡
+                    </div>
+                    <div>
+                        <div class="text-xl font-black tracking-tight grad-text" id="headerBrandName">RST Electronics</div>
+                        <div class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Mobile, Electronics, Security & Repair Center</div>
+                    </div>
+                </a>
+
+                <div class="flex-1 max-w-lg hidden md:block">
+                    <div class="relative">
+                        <input type="text" id="publicSearchInput" onkeyup="handleLiveSearch(this.value)" placeholder="Search iPhone 15, CCTV 4K, Smart Locks, IMEIs..." class="w-full pl-11 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-xs font-medium outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition">
+                        <i class="fas fa-search absolute left-4 top-3 text-slate-400 text-sm"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleCartDrawer()" class="relative p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition flex items-center gap-2">
+                        <i class="fas fa-shopping-cart text-base"></i>
+                        <span id="publicCartBadge" class="font-black text-xs px-2 py-0.5 rounded-full bg-indigo-600 text-white shadow-md">0</span>
+                    </button>
+                    <button onclick="launchAdminApp()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-xs shadow-xl shadow-emerald-500/25 hover:scale-105 transition flex items-center gap-2">
+                        <i class="fas fa-desktop"></i> <span>Launch Control Panel</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- SUB-MENU -->
+        <nav class="bg-indigo-950 text-white shadow-md no-print">
+            <div class="max-w-7xl mx-auto px-6 flex gap-6 overflow-x-auto py-2.5 text-xs font-bold uppercase tracking-wider">
+                <button onclick="showPublicPage('home')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1 active-nav" data-page="home"><i class="fas fa-home text-indigo-400"></i> <span id="navHomeText">Home</span></button>
+                <button onclick="showPublicPage('shop')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1" data-page="shop"><i class="fas fa-store text-emerald-400"></i> <span id="navShopText">Catalog</span></button>
+                <button onclick="showPublicPage('repairTrack')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1" data-page="repairTrack"><i class="fas fa-screwdriver-wrench text-amber-400"></i> <span id="navRepairText">Track Repair Ticket</span></button>
+                <button onclick="showPublicPage('offers')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1" data-page="offers"><i class="fas fa-tags text-rose-400"></i> <span id="navOffersText">Offers</span></button>
+                <button onclick="showPublicPage('telecom')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1" data-page="telecom"><i class="fas fa-mobile-alt text-amber-400"></i> <span id="navTelecomText">Telecom Top-Up</span></button>
+                <button onclick="showPublicPage('utility')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1" data-page="utility"><i class="fas fa-bolt text-teal-400"></i> <span id="navUtilityText">Utility Bills</span></button>
+                <button onclick="showPublicPage('portfolio')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1" data-page="portfolio"><i class="fas fa-building text-purple-400"></i> <span id="navProjectsText">Projects</span></button>
+                <button onclick="showPublicPage('about')" class="public-nav-tab hover:text-indigo-300 transition flex items-center gap-1.5 py-1" data-page="about"><i class="fas fa-info-circle text-blue-400"></i> <span id="navAboutText">About & Terms</span></button>
+            </div>
+        </nav>
+
+        <!-- PUBLIC PAGE BODY -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+            <!-- HOME PAGE -->
+            <section id="page-home" class="public-page-section space-y-12 animate-fade-in">
+                
+                <!-- HERO INTERACTIVE SLIDER / CAROUSEL -->
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl border border-indigo-500/30 group" id="heroCarouselWrapper">
+                    <div id="heroSlidesContainer" class="flex transition-transform duration-700 ease-out">
+                        
+                        <!-- SLIDE 1: Google Play Showcase & Smart Devices -->
+                        <div class="w-full flex-shrink-0 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white p-8 md:p-12 relative min-h-[420px] flex items-center">
+                            <div class="grid md:grid-cols-2 gap-8 items-center w-full z-10">
+                                <div class="space-y-4">
+                                    <span class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-300 text-xs font-black uppercase tracking-wider backdrop-blur-md border border-indigo-500/30 inline-flex items-center gap-2">
+                                        <i class="fas fa-mobile-alt text-amber-400"></i> Official Mobile & Smart Ecosystem
+                                    </span>
+                                    <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight" id="heroSlide1Title">
+                                        RST Electronics & Smart Tech Solutions
+                                    </h1>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed" id="heroSlide1Desc">
+                                        Premium smartphones, tablets, high-definition accessories, and certified device repair diagnostics with full warranty across Sultanate of Oman.
+                                    </p>
+                                    <div class="pt-2 flex flex-wrap gap-3">
+                                        <button onclick="showPublicPage('shop')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-black text-xs shadow-xl shadow-emerald-500/20 hover:scale-105 transition flex items-center gap-2">
+                                            <i class="fas fa-store"></i> <span id="btnBrowseCatalog">Explore Catalog</span>
+                                        </button>
+                                        <button onclick="showPublicPage('repairTrack')" class="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs backdrop-blur-md border border-white/20 transition flex items-center gap-2">
+                                            <i class="fas fa-screwdriver-wrench text-amber-400"></i> Track Repair Job
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="hidden md:flex justify-center items-center">
+                                    <img src="170-1708478_redesigned-google-play-store-google-play-store-mobile.png" alt="Smartphones Showcase" class="max-h-72 object-contain filter drop-shadow-2xl hover:scale-105 transition duration-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SLIDE 2: Nexus & Mobile Devices Showcase -->
+                        <div class="w-full flex-shrink-0 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white p-8 md:p-12 relative min-h-[420px] flex items-center">
+                            <div class="grid md:grid-cols-2 gap-8 items-center w-full z-10">
+                                <div class="space-y-4">
+                                    <span class="px-3.5 py-1.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-black uppercase tracking-wider backdrop-blur-md border border-blue-500/30 inline-flex items-center gap-2">
+                                        <i class="fas fa-layer-group text-emerald-400"></i> Next-Gen Devices & Hardware
+                                    </span>
+                                    <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight">
+                                        Latest Smartphones & Smart Accessories
+                                    </h1>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                        Discover 4G LTE devices, OLED displays, smart door locks, and CCTV security systems with fast delivery and expert installation.
+                                    </p>
+                                    <div class="pt-2 flex flex-wrap gap-3">
+                                        <button onclick="launchAdminApp()" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black text-xs shadow-xl hover:scale-105 transition flex items-center gap-2">
+                                            <i class="fas fa-desktop"></i> Open POS & Inventory
+                                        </button>
+                                        <button onclick="showPublicPage('telecom')" class="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs backdrop-blur-md border border-white/20 transition flex items-center gap-2">
+                                            <i class="fas fa-mobile-alt text-teal-400"></i> Telecom Recharge
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="hidden md:flex justify-center items-center gap-4">
+                                    <img src="46-465245_google-play-edition-4g-lte-nexus-5-hd.png" alt="Google Play Devices" class="max-h-64 object-contain filter drop-shadow-2xl hover:scale-105 transition duration-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SLIDE 3: Atom Tickets & App Pre-Orders -->
+                        <div class="w-full flex-shrink-0 bg-gradient-to-r from-purple-950 via-slate-950 to-indigo-950 text-white p-8 md:p-12 relative min-h-[420px] flex items-center">
+                            <div class="grid md:grid-cols-2 gap-8 items-center w-full z-10">
+                                <div class="space-y-4">
+                                    <span class="px-3.5 py-1.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider backdrop-blur-md border border-amber-500/30 inline-flex items-center gap-2">
+                                        <i class="fas fa-qrcode text-amber-400"></i> Digital Ticket & Order System
+                                    </span>
+                                    <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight">
+                                        Instant QR Receipts & Service Booking
+                                    </h1>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                        Pre-order gadgets, track repair tickets in real-time, and get digital QR invoices sent directly to your phone.
+                                    </p>
+                                    <div class="pt-2 flex flex-wrap gap-3">
+                                        <button onclick="showPublicPage('repairTrack')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-black text-xs shadow-xl hover:scale-105 transition flex items-center gap-2">
+                                            <i class="fas fa-search"></i> Check Ticket Status
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="hidden md:flex justify-center items-center">
+                                    <img src="31-318793_how-atom-tickets-works-google-play-hd-png.png" alt="Digital Tickets & Mobile App" class="max-h-64 object-contain filter drop-shadow-2xl hover:scale-105 transition duration-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SLIDE 4: Family Library & Subscription Offers -->
+                        <div class="w-full flex-shrink-0 bg-gradient-to-r from-emerald-950 via-slate-950 to-teal-950 text-white p-8 md:p-12 relative min-h-[420px] flex items-center">
+                            <div class="grid md:grid-cols-2 gap-8 items-center w-full z-10">
+                                <div class="space-y-4">
+                                    <span class="px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black uppercase tracking-wider backdrop-blur-md border border-emerald-500/30 inline-flex items-center gap-2">
+                                        <i class="fas fa-ribbon text-emerald-400"></i> Special Subscription Bundles
+                                    </span>
+                                    <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight">
+                                        Family Packages & Security Deals
+                                    </h1>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                        Subscribe to maintenance protection plans, multi-camera home automation bundles, and exclusive store discounts.
+                                    </p>
+                                    <div class="pt-2 flex flex-wrap gap-3">
+                                        <button onclick="showPublicPage('offers')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-black text-xs shadow-xl hover:scale-105 transition flex items-center gap-2">
+                                            <i class="fas fa-tags"></i> View Exclusive Deals
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="hidden md:flex justify-center items-center gap-4">
+                                    <img src="11-116270_play-family-library-google-play-add-to-family.png" alt="Family Library & Apps" class="max-h-56 object-contain filter drop-shadow-2xl">
+                                    <img src="50-502330_please-subscribe-png-transparent-png.png" alt="Subscribe Now" class="max-h-36 object-contain">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Slider Nav Controls -->
+                    <button onclick="prevHeroSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-md transition">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button onclick="nextHeroSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-md transition">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <!-- Slider Pagination Dots -->
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2" id="heroDotContainer">
+                        <button onclick="goToHeroSlide(0)" class="w-3 h-3 rounded-full bg-white transition" id="heroDot-0"></button>
+                        <button onclick="goToHeroSlide(1)" class="w-3 h-3 rounded-full bg-white/40 transition" id="heroDot-1"></button>
+                        <button onclick="goToHeroSlide(2)" class="w-3 h-3 rounded-full bg-white/40 transition" id="heroDot-2"></button>
+                        <button onclick="goToHeroSlide(3)" class="w-3 h-3 rounded-full bg-white/40 transition" id="heroDot-3"></button>
+                    </div>
+                </div>
+
+                <!-- Featured Products -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-black">Featured Products & Accessories</h3>
+                        <button onclick="showPublicPage('shop')" class="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs hover:underline">View All →</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5" id="homeProductsGrid"></div>
+                </div>
+            </section>
+
+            <!-- SHOP PAGE -->
+            <section id="page-shop" class="public-page-section hidden space-y-6 animate-fade-in">
+                <div class="flex justify-between items-center flex-wrap gap-4">
+                    <h2 class="text-2xl font-black">Complete Inventory Catalog</h2>
+                    <select id="shopCategoryFilter" onchange="filterShopProductsCategory(this.value)" class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold outline-none shadow-sm">
+                        <option value="ALL">All Categories</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5" id="shopProductsGrid"></div>
+            </section>
+
+            <!-- REPAIR TRACKING PAGE -->
+            <section id="page-repairTrack" class="public-page-section hidden space-y-6 max-w-xl mx-auto animate-fade-in">
+                <div class="p-6 rounded-3xl glass-panel space-y-4 text-center shadow-md">
+                    <div class="text-4xl text-amber-500"><i class="fas fa-screwdriver-wrench"></i></div>
+                    <h2 class="text-2xl font-black">Track Device Repair Ticket</h2>
+                    <p class="text-xs text-slate-400">Enter your Job Ticket Number (e.g. JOB-8491) or Registered Phone Number to inspect repair status.</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="trackTicketInput" placeholder="Ticket # or Phone..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs outline-none">
+                        <button onclick="lookupPublicRepairTicket()" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs">Search</button>
+                    </div>
+                    <div id="repairLookupResult" class="text-left pt-3"></div>
+                </div>
+            </section>
+
+            <!-- OFFERS PAGE -->
+            <section id="page-offers" class="public-page-section hidden space-y-6 animate-fade-in">
+                <h2 class="text-2xl font-black">🔥 Special Offers & Promotions</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="p-6 rounded-3xl bg-gradient-to-r from-rose-600 to-pink-600 text-white space-y-3 shadow-xl">
+                        <span class="px-3 py-1 rounded-full bg-white/20 text-xs font-black uppercase">Weekly Special</span>
+                        <h3 class="text-2xl font-black">30% OFF CCTV 4K Bundles</h3>
+                        <p class="text-white/80 text-xs">HIKVISION 4K DVR + 4 Cameras + Free Muscat Installation voucher.</p>
+                        <button onclick="showPublicPage('shop')" class="px-5 py-2.5 rounded-xl bg-white text-rose-600 font-black text-xs">Explore Bundles</button>
+                    </div>
+                    <div class="p-6 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white space-y-3 shadow-xl">
+                        <span class="px-3 py-1 rounded-full bg-white/20 text-xs font-black uppercase">Screen Replacement Promo</span>
+                        <h3 class="text-2xl font-black">OLED Display Replacement Special</h3>
+                        <p class="text-white/80 text-xs">Original OLED screen replacement with 90-day warranty certificate.</p>
+                        <button onclick="showPublicPage('repairTrack')" class="px-5 py-2.5 rounded-xl bg-white text-indigo-600 font-black text-xs">Book Repair</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELECOM PAGE -->
+            <section id="page-telecom" class="public-page-section hidden space-y-6 animate-fade-in">
+                <div class="text-center max-w-lg mx-auto space-y-2">
+                    <h2 class="text-2xl font-black">📱 Telecom Mobile Top-Up</h2>
+                    <p class="text-slate-400 text-xs">Instant recharge for Omantel, Ooredoo, and Vodafone in Oman.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-5 max-w-3xl mx-auto" id="publicTelecomGrid"></div>
+            </section>
+
+            <!-- UTILITY PAGE -->
+            <section id="page-utility" class="public-page-section hidden space-y-6 animate-fade-in">
+                <div class="text-center max-w-lg mx-auto space-y-2">
+                    <h2 class="text-2xl font-black">⚡ Utility Bill Settlement</h2>
+                    <p class="text-slate-400 text-xs">Electricity (Nama), Water, and Fiber Internet bill payments.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-5 max-w-3xl mx-auto" id="publicUtilityGrid"></div>
+            </section>
+
+            <!-- PORTFOLIO PAGE -->
+            <section id="page-portfolio" class="public-page-section hidden space-y-6 animate-fade-in">
+                <h2 class="text-2xl font-black text-center">Engineered Projects Portfolio</h2>
+                <div class="grid md:grid-cols-3 gap-5">
+                    <div class="p-5 rounded-3xl glass-panel space-y-2 shadow-sm">
+                        <div class="text-3xl text-indigo-500"><i class="fas fa-video"></i></div>
+                        <h3 class="font-black text-sm">Commercial CCTV 4K Setup</h3>
+                        <p class="text-xs text-slate-400">Multi-channel security surveillance for commercial villas and retail hubs in Muscat.</p>
+                    </div>
+                    <div class="p-5 rounded-3xl glass-panel space-y-2 shadow-sm">
+                        <div class="text-3xl text-emerald-500"><i class="fas fa-door-open"></i></div>
+                        <h3 class="font-black text-sm">Smart Automated Door Motors</h3>
+                        <p class="text-xs text-slate-400">Heavy-duty swing shutter motors with biometric RFID readers and keypad controllers.</p>
+                    </div>
+                    <div class="p-5 rounded-3xl glass-panel space-y-2 shadow-sm">
+                        <div class="text-3xl text-purple-500"><i class="fas fa-screwdriver-wrench"></i></div>
+                        <h3 class="font-black text-sm">Micro-Soldering Chip Diagnostics</h3>
+                        <p class="text-xs text-slate-400">Cleanroom motherboard logic board repairs, power IC replacements, and water damage recovery.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABOUT PAGE -->
+            <section id="page-about" class="public-page-section hidden max-w-2xl mx-auto space-y-5 animate-fade-in">
+                <div class="p-6 rounded-3xl glass-panel space-y-3 shadow-md">
+                    <h2 class="text-2xl font-black">About RST Electronics & Terms</h2>
+                    <p class="text-xs text-slate-400 leading-relaxed"><strong>Legal Name:</strong> AL WAHA AL KHDRA AL MUTAKAMILAH TRADING</p>
+                    <p class="text-xs text-slate-400 leading-relaxed"><strong>Commercial Register (CR):</strong> 1374092</p>
+                    <p class="text-xs text-slate-400 leading-relaxed"><strong>VAT Registration ID:</strong> OM10029384</p>
+                    <p class="text-xs text-slate-400 leading-relaxed"><strong>Headquarters:</strong> Mabellah Sanaya, Road No 6, Sultanate of Oman</p>
+                    <div class="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                        <h4 class="font-black text-xs uppercase">Enterprise Terms of Service & Repair Policies</h4>
+                        <p class="text-[11px] text-slate-500 leading-relaxed">1. All repair estimates are valid for 14 days.<br>2. Replaced hardware components carry a 90-day limited warranty.<br>3. Unclaimed devices exceeding 60 days post-repair notification are subject to storage fees or disposition.<br>4. Refunds for custom parts or liquid damage diagnostics are subject to technical evaluation.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- PUBLIC FOOTER -->
+        <footer class="bg-slate-950 text-slate-400 text-xs py-10 px-6 border-t border-slate-800 mt-16 no-print">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="space-y-2">
+                    <h4 class="text-white font-black text-sm">RST Electronics</h4>
+                    <p class="text-[11px] leading-relaxed">AL WAHA AL KHDRA AL MUTAKAMILAH TRADING<br>CR: 1374092 | VAT: OM10029384</p>
+                    <p class="text-[11px]">📍 Mabellah Sanaya, Road 6, Muscat, Oman<br>📞 +968 9430 1393 | ✉️ info@rst-electronics.om</p>
+                </div>
+                <div class="space-y-1">
+                    <h5 class="text-white font-bold text-xs uppercase tracking-wider mb-2">Navigation</h5>
+                    <div><a href="#" onclick="showPublicPage('shop')" class="hover:text-white">Shop Catalog</a></div>
+                    <div><a href="#" onclick="showPublicPage('repairTrack')" class="hover:text-white">Track Repair Job</a></div>
+                    <div><a href="#" onclick="showPublicPage('telecom')" class="hover:text-white">Telecom Top-Up</a></div>
+                    <div><a href="#" onclick="showPublicPage('utility')" class="hover:text-white">Utility Bills</a></div>
+                </div>
+                <div class="space-y-1">
+                    <h5 class="text-white font-bold text-xs uppercase tracking-wider mb-2">Services & Solutions</h5>
+                    <div>CCTV 4K Security Systems</div>
+                    <div>Smart Door Lock Motor Setup</div>
+                    <div>Mobile & Laptop Micro-Soldering</div>
+                    <div>Bill Settlement & Top-Up</div>
+                </div>
+                <div class="space-y-2">
+                    <h5 class="text-white font-bold text-xs uppercase tracking-wider">Stay Connected</h5>
+                    <p class="text-[11px] text-slate-400">Subscribe for special offer updates.</p>
+                    <div class="flex gap-2">
+                        <input type="email" placeholder="Enter your email" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs outline-none flex-1">
+                        <button onclick="triggerToast('Subscribed!', 'success')" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white font-bold">Go</button>
+                    </div>
+                </div>
+            </div>
+            <div class="max-w-7xl mx-auto pt-6 mt-6 border-t border-slate-900 text-center text-[11px] text-slate-500">
+                © 2026 RST Electronics — AL WAHA AL KHDRA AL MUTAKAMILAH TRADING | All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript Translations & Hero Carousel Engine -->
+    <script>
+        // Global Persistent State
+        let currentUser = JSON.parse(localStorage.getItem('rst_user') || 'null');
+        let currentLang = localStorage.getItem('rst_lang') || 'en';
+        let isDarkMode = localStorage.getItem('rst_dark') === 'true';
+        let activeCurrency = localStorage.getItem('rst_currency') || 'OMR';
+        let publicCart = JSON.parse(localStorage.getItem('rst_public_cart') || '[]');
+        let posCart = [];
+        let activeInvoiceForPrint = null;
+        let activeDialogCallback = null;
+
+        // Exchange Rates relative to 1 OMR
+        const exchangeRates = {
+            OMR: 1.0,
+            USD: 2.60,
+            EUR: 2.40,
+            AED: 9.54,
+            SAR: 9.75
+        };
+
+        // Master Software Settings Object
+        let masterOptions = JSON.parse(localStorage.getItem('rst_master_options') || JSON.stringify({
+            business_name: 'MarufEdge ProMedia',
+            legal_name: 'AL WAHA AL KHDRA AL MUTAKAMILAH TRADING',
+            cr_number: '1374092',
+            vat_number: 'OM10029384',
+            address: 'Mabellah Sanaya, Road 6, Muscat, Oman',
+            phone: '+968 9430 1393',
+            email: 'maruf.bd@live.com',
+            tax_rate: 0.05,
+            enable_tax: true,
+            invoice_prefix: 'RST-',
+            invoice_terms: 'Payment due within 14 days. 90-day warranty on original spare parts.',
+            logo_url: '⚡ MarufEdge ProMedia',
+            inventoria_sync: true,
+            inventoria_ip: '192.168.1.100:8080',
+            paypal_api: 'live_sec_rst_paypal_om',
+            authorize_api: 'auth_rst_key_998',
+            web_access_pass: 'Oman2027'
+        }));
+
+        // Multilingual Dictionary
+        const i18n = {
+            en: {
+                home: 'Home', shop: 'Catalog', repairTrack: 'Track Repair Ticket',
+                offers: 'Offers', telecom: 'Telecom Top-Up', utility: 'Utility Bills',
+                portfolio: 'Projects', about: 'About & Terms',
+                heroTitle1: 'MarufEdge ProMedia — Smart Business ERP & AI Hub',
+                heroDesc1: 'Enterprise hardware distribution, certified repair diagnostics, and AI Studio-G decision algorithms tailored for Oman, Bangladesh & international trade.',
+                browseCatalog: 'Browse Catalog'
+            },
+            ar: {
+                home: 'الرئيسية', shop: 'كتالوج المنتجات', repairTrack: 'تتبع تذكرة الصيانة',
+                offers: 'العروض', telecom: 'تعبئة الرصيد', utility: 'فواتير الخدمات',
+                portfolio: 'المشاريع', about: 'من نحن والشروط',
+                heroTitle1: 'ماروف إيدج بروميديا — نظام إدارة المؤسسات والذكاء الاصطناعي',
+                heroDesc1: 'توزيع الأجهزة الإلكترونية، تشخيص الأعطال بالذكاء الاصطناعي، وخدمات الصيانة المعتمدة في سلطنة عمان وبنغلاديش.',
+                browseCatalog: 'تصفح الكتالوج'
+            },
+            bn: {
+                home: 'হোম', shop: 'ক্যাটালগ', repairTrack: 'মেরামত টিকিট ট্র্যাক',
+                offers: 'অফার', telecom: 'টেলিকম রিচার্জ', utility: 'ইউটিলিটি বিল',
+                portfolio: 'প্রজেক্টস', about: 'আমাদের কথা ও শর্তাবলী',
+                heroTitle1: 'মারুফএজ প্রোমিডিয়া — স্মার্ট বিজনেস ইআরপি এবং এআই হাব',
+                heroDesc1: 'গুগল এআই স্টুডিও-জি প্রযুক্তির সাহায্যে ইলেক্ট্রনিক্স পণ্য সরবরাহ, আইফোন ও সিসিটিভি মেরামত এবং ব্যবসা পরিচালনা।',
+                browseCatalog: 'ক্যাটালগ ব্রাউজ করুন'
+            },
+            ur: {
+                home: 'ہوم', shop: 'کیٹلاگ', repairTrack: 'ٹریک مرمت ٹکٹ',
+                offers: 'آفرز', telecom: 'ٹیلیکام ریچارج', utility: 'یوٹیلیٹی بلز',
+                portfolio: 'پروجیکٹس', about: 'تعارف اور شرائط',
+                heroTitle1: 'ماروف ایج پرو میڈیا — اسمارٹ بزنس ای آر پی',
+                heroDesc1: 'عمان، بنگلہ دیش اور بین الاقوامی تجارت کے لیے الیکٹرانکس کی تقسیم، مرمت کی تشخیص اور اے آئی اسٹوڈیو-جی ٹیکنالوجی۔',
+                browseCatalog: 'کیٹلاگ دیکھیں'
+            }
+        };
+
+        // Hero Slider Controller
+        let currentHeroIndex = 0;
+        let heroTimer = null;
+
+        function initHeroSlider() {
+            startHeroAutoPlay();
+        }
+
+        function startHeroAutoPlay() {
+            if (heroTimer) clearInterval(heroTimer);
+            heroTimer = setInterval(() => { nextHeroSlide(); }, 5000);
+        }
+
+        function nextHeroSlide() {
+            currentHeroIndex = (currentHeroIndex + 1) % 4;
+            updateHeroSlidePosition();
+        }
+
+        function prevHeroSlide() {
+            currentHeroIndex = (currentHeroIndex - 1 + 4) % 4;
+            updateHeroSlidePosition();
+        }
+
+        function goToHeroSlide(index) {
+            currentHeroIndex = index;
+            updateHeroSlidePosition();
+            startHeroAutoPlay();
+        }
+
+        function updateHeroSlidePosition() {
+            const container = document.getElementById('heroSlidesContainer');
+            if (container) {
+                container.style.transform = `translateX(-${currentHeroIndex * 100}%)`;
+            }
+            for (let i = 0; i < 4; i++) {
+                const dot = document.getElementById(`heroDot-${i}`);
+                if (dot) {
+                    if (i === currentHeroIndex) {
+                        dot.className = 'w-3 h-3 rounded-full bg-white transition';
+                    } else {
+                        dot.className = 'w-3 h-3 rounded-full bg-white/40 transition';
+                    }
+                }
+            }
+        }
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('rst_lang', lang);
+            document.documentElement.dir = (lang === 'ar' || lang === 'ur') ? 'rtl' : 'ltr';
+
+            const dict = i18n[lang] || i18n['en'];
+            const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+
+            setTxt('navHomeText', dict.home);
+            setTxt('navShopText', dict.shop);
+            setTxt('navRepairText', dict.repairTrack);
+            setTxt('navOffersText', dict.offers);
+            setTxt('navTelecomText', dict.telecom);
+            setTxt('navUtilityText', dict.utility);
+            setTxt('navProjectsText', dict.portfolio);
+            setTxt('navAboutText', dict.about);
+            setTxt('heroSlide1Title', dict.heroTitle1);
+            setTxt('heroSlide1Desc', dict.heroDesc1);
+            setTxt('btnBrowseCatalog', dict.browseCatalog);
+
+            triggerToast(`Language switched to ${lang.toUpperCase()}`, 'info');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initHeroSlider();
+        });
+
+        window.nextHeroSlide = nextHeroSlide;
+        window.prevHeroSlide = prevHeroSlide;
+        window.goToHeroSlide = goToHeroSlide;
+    </script>
+</body>
+</html>
